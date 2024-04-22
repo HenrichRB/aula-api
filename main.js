@@ -1,25 +1,76 @@
-
-const pesquisa = document.getElementById('pesquisa').addEventListener('click', () => {
-    const resultado = document.getElementById('resultado');
-    const cep = document.getElementById('cep').value;
-
-    if (!cep) {
-        alert('O campo deve ser preenchido!');
-        return
-    }
-
-
-    const url = `https://viacep.com.br/ws/${cep}/json`
-    fetch(url)
-        .then((response) => response.json())
-        .then((json) => {
-            resultado.innerHTML = `
-                <li>Bairro: ${json.bairro}</li>
-                <li>Localidade: ${json.localidade}</li>
-                <li>ddd: ${json.ddd}</li>
-                <li>Logradouro: ${json.logradouro}</li>
-                <li>UF: ${json.uf}</li>
-            `
-        })
+window.addEventListener('load', () => {
+    const $zipcodeButton = document.getElementById('app__zipcode__button');
+    $zipcodeButton.addEventListener('click', handleSubmit);
 })
 
+function handleSubmit(e) {
+    e.preventDefault();
+    const cepInput = document.getElementById('cep-input');
+    const cepValue = cepInput.value;
+
+    pesquisarEndereco(cepValue);
+}
+
+function pesquisarEndereco(value) {
+    showLoad();
+    return fetch(`https://viacep.com.br/ws/${value}/json/`)
+    .then((response) => response.json())
+    .then(data => {
+        renderResponse('[data-cep]',data.cep)
+        renderResponse('[data-localidade]',data.localidade)
+        renderResponse('[data-logradouro]',data.logradouro)
+        renderResponse('[data-uf]',data.uf)
+        renderResponse('[data-bairro]',data.bairro)
+        renderResponse('[data-ddd]',data.ddd)
+        showResult()
+
+        if(data.erro){
+            showError()
+            return
+        }
+    }).catch((error)=>{
+        showError()
+        console.log(
+          "There has been a problem with your fetch operation: " + error.message,
+        );
+        
+    })
+}
+function showLoad(){
+    hideElementByid('adress')
+    hideElementByid('error')
+    showElementByid('load')
+}
+
+function showResult(){
+    hideElementByid('load')
+    hideElementByid('error')
+    showElementByid('adress')
+}
+
+function showError(){
+    hideElementByid('load')
+    hideElementByid('adress')
+    showElementByid('error')
+}
+
+function renderResponse(tagSelector, value){
+    const $cep = document.querySelector(tagSelector)
+    $cep.innerHTML=value
+}
+
+
+function showElementByid(id) {
+    const element = document.getElementById(id);
+    element.setAttribute('data-visible', 'true');
+}
+
+function hideElementByid(id) {
+    const element = document.getElementById(id);
+    element.setAttribute('data-visible', 'false');
+}
+
+function handleError() {
+    hideElementByid('load');
+    showElementByid('error');
+}
